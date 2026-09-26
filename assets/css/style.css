@@ -346,103 +346,172 @@ button, input, select, textarea {
 .mobile-nav-toggle {
   display: none;
   background: #f8fafc;
-  border: 1px solid #dce4ec;
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
+  border: 1.5px solid #dce4ec;
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
   cursor: pointer;
   color: var(--primary);
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  z-index: 10;
 }
 
 .mobile-nav-toggle:hover {
   background: #ffffff;
   border-color: var(--blue-brand);
   color: var(--blue-brand);
+  box-shadow: 0 2px 8px rgba(18, 61, 106, 0.1);
+}
+
+.mobile-nav-toggle:active {
+  transform: scale(0.94);
+  background: rgba(27, 98, 165, 0.08);
 }
 
 .mobile-nav-toggle svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   fill: currentColor;
+  pointer-events: none;
 }
 
-/* Mobile Drawer */
+/* Mobile Drawer - Modern Slide System with Safe Area & Transforms */
 .mobile-drawer {
   position: fixed;
   top: 0;
-  right: -320px;
-  width: 300px;
+  right: 0;
+  width: 320px;
+  max-width: 86vw;
   height: 100vh;
+  height: 100dvh;
   background: #ffffff;
-  z-index: 1050;
-  padding: 24px;
-  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
+  z-index: 2100;
+  padding: 22px 20px;
+  box-shadow: -10px 0 40px rgba(9, 35, 62, 0.25);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 18px;
+  transform: translateX(105%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 html[dir="ltr"] .mobile-drawer {
   right: auto;
-  left: -320px;
-  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.15);
-}
-
-.mobile-drawer.open {
-  right: 0;
+  left: 0;
+  transform: translateX(-105%);
+  box-shadow: 10px 0 40px rgba(9, 35, 62, 0.25);
 }
 
 html[dir="ltr"] .mobile-drawer.open {
-  left: 0;
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--border-light);
+  padding-bottom: 14px;
 }
 
 .drawer-close {
-  background: none;
-  border: none;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 4px;
   color: var(--text-muted);
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.drawer-close:hover,
+.drawer-close:active {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: scale(0.96);
+}
+
+.drawer-close svg {
+  pointer-events: none;
 }
 
 .drawer-links {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 4px;
 }
 
 .drawer-links a {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--primary);
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-light);
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.drawer-links a:hover,
+.drawer-links a:active {
+  background: rgba(27, 98, 165, 0.08);
+  color: var(--blue-brand);
+  transform: translateX(-4px);
+}
+
+html[dir="ltr"] .drawer-links a:hover,
+html[dir="ltr"] .drawer-links a:active {
+  transform: translateX(4px);
 }
 
 .drawer-overlay {
-  display: none;
   position: fixed;
   inset: 0;
-  background: rgba(9, 35, 62, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 1040;
+  background: rgba(9, 35, 62, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 2050;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+  pointer-events: none;
 }
 
 .drawer-overlay.active {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* ==========================================================================

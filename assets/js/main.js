@@ -4,7 +4,79 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. State Management
+  // 1. Mobile Navigation Drawer (Initialized immediately & resiliently)
+  const mobileToggle = document.getElementById('mobileNavToggle');
+  const mobileDrawer = document.getElementById('mobileDrawer');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  const drawerClose = document.getElementById('drawerClose');
+
+  function openDrawer(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (mobileDrawer) {
+      mobileDrawer.classList.add('open');
+      mobileDrawer.setAttribute('aria-hidden', 'false');
+    }
+    if (drawerOverlay) drawerOverlay.classList.add('active');
+    if (mobileToggle) mobileToggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (mobileDrawer) {
+      mobileDrawer.classList.remove('open');
+      mobileDrawer.setAttribute('aria-hidden', 'true');
+    }
+    if (drawerOverlay) drawerOverlay.classList.remove('active');
+    if (mobileToggle) mobileToggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', openDrawer);
+    mobileToggle.addEventListener('touchend', (e) => {
+      openDrawer(e);
+    });
+  }
+  if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+  if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
+  document.querySelectorAll('.drawer-links a').forEach(a => {
+    a.addEventListener('click', () => {
+      closeDrawer();
+    });
+  });
+
+  // Close drawer on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mobileDrawer && mobileDrawer.classList.contains('open')) {
+      closeDrawer();
+    }
+  });
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024 && mobileDrawer && mobileDrawer.classList.contains('open')) {
+      closeDrawer();
+    }
+  });
+
+  // Sticky Header Scroll Effect
+  const siteHeader = document.getElementById('siteHeader');
+  if (siteHeader) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        siteHeader.classList.add('scrolled');
+      } else {
+        siteHeader.classList.remove('scrolled');
+      }
+    }, { passive: true });
+  }
+
+  // 2. State Management
   let currentLang = localStorage.getItem('silem_lang') || 'ar';
   let currentSlide = 0;
   let slideInterval = null;
@@ -27,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bookingId: ''
   };
 
-  // 2. Language Translation Engine
+  // 3. Language Translation Engine
   const langToggleBtn = document.getElementById('langToggleBtn');
   
   function applyLanguage(lang) {
@@ -52,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Translate all elements with data-i18n
-    const dict = translations[lang] || translations.ar;
+    const dict = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : ((typeof translations !== 'undefined' && translations.ar) ? translations.ar : {});
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
       if (dict[key]) {
@@ -68,11 +140,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Re-generate time slots to reflect language
-    generateTimeSlots();
+    // Re-generate time slots to reflect language if on booking page
+    if (typeof generateTimeSlots === 'function' && document.getElementById('slotsContainer')) {
+      generateTimeSlots();
+    }
 
     // Update Hero Video Audio UI with active language
-    updateVideoAudioUI();
+    if (typeof updateVideoAudioUI === 'function') {
+      updateVideoAudioUI();
+    }
   }
 
   if (langToggleBtn) {
@@ -81,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Hero Video Player & Audio Controls (Default: Muted)
+  // 4. Hero Video Player & Audio Controls (Default: Muted)
   const heroVideo = document.getElementById('heroVideo');
   const videoSoundToggle = document.getElementById('videoSoundToggle');
   const soundIconWrap = document.getElementById('soundIconWrap');
@@ -92,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateVideoAudioUI() {
     if (!videoSoundToggle || !heroVideo) return;
-    const dict = translations[currentLang] || translations.ar;
+    const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : ((typeof translations !== 'undefined' && translations.ar) ? translations.ar : {});
     if (heroVideo.muted) {
       videoSoundToggle.classList.remove('unmuted');
       if (soundIconWrap) soundIconWrap.innerHTML = muteSvg;
@@ -107,11 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (heroVideo) {
-    // By default, enforce muted playback as required by browsers & user
     heroVideo.muted = true;
     heroVideo.volume = 1.0;
     heroVideo.play().catch(() => {
-      // Auto-play policy retry
       document.addEventListener('click', () => {
         if (heroVideo.paused) heroVideo.play();
       }, { once: true });
@@ -129,50 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Initialize UI on load
     updateVideoAudioUI();
   }
 
   // Initial language setup
   applyLanguage(currentLang);
-
-  // 4. Mobile Navigation Drawer
-  const mobileToggle = document.getElementById('mobileNavToggle');
-  const mobileDrawer = document.getElementById('mobileDrawer');
-  const drawerOverlay = document.getElementById('drawerOverlay');
-  const drawerClose = document.getElementById('drawerClose');
-
-  function openDrawer() {
-    if (mobileDrawer) mobileDrawer.classList.add('open');
-    if (drawerOverlay) drawerOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeDrawer() {
-    if (mobileDrawer) mobileDrawer.classList.remove('open');
-    if (drawerOverlay) drawerOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  if (mobileToggle) mobileToggle.addEventListener('click', openDrawer);
-  if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
-  if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
-
-  document.querySelectorAll('.drawer-links a').forEach(a => {
-    a.addEventListener('click', closeDrawer);
-  });
-
-  // Sticky Header Scroll Effect
-  const siteHeader = document.getElementById('siteHeader');
-  if (siteHeader) {
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 20) {
-        siteHeader.classList.add('scrolled');
-      } else {
-        siteHeader.classList.remove('scrolled');
-      }
-    }, { passive: true });
-  }
 
   // 5. Interactive Direct Booking System (No Login)
   const serviceItems = document.querySelectorAll('.booking-service-item');
@@ -260,8 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   function generateTimeSlots() {
-    if (!slotsContainer) return;
-    slotsContainer.innerHTML = '';
+    const container = document.getElementById('slotsContainer');
+    if (!container) return;
+    container.innerHTML = '';
     clinicSlots.forEach(slot => {
       const slotEl = document.createElement('div');
       slotEl.className = `time-slot ${slot.booked ? 'booked' : ''}`;
@@ -275,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
           bookingData.timeSlot = text;
         });
       }
-      slotsContainer.appendChild(slotEl);
+      container.appendChild(slotEl);
     });
   }
 
